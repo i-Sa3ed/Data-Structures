@@ -20,7 +20,7 @@ struct Node {
 
     Node(int _data) : data(_data) {} // constructor
     ~Node() { // destructor
-        cout << "Destroy the value: " << data << "at the address: " << this << endl;
+        cout << "Destroy the value: " << data << " at the address: " << this << endl;
     }
 };
 
@@ -81,6 +81,25 @@ public: // the operations on data
     LinkedList(const LinkedList&) = delete;
     LinkedList &operator=(const LinkedList &another) = delete;
 
+    ~LinkedList() { // O(n) time - O(1) memory
+        while(head) {
+            Node* cur = head->next;
+            delete head;
+            head = cur;
+        }
+    }
+
+    // simple functions:
+    void add_node(Node* node) {
+        debug_add_node(node);
+        length++;
+    }
+    void delete_node(Node* node) {
+        debug_remove_node(node);
+        length--;
+        delete node;
+    }
+
     void print() {
         Node* cur = head; // to avoid changing 'head' value
         while(cur != nullptr) {
@@ -103,6 +122,33 @@ public: // the operations on data
 
         length++;
     }
+    void insert_front(int value) {
+        Node* front = new Node(value);
+        if (head == nullptr) {
+            head = tail = front;
+        }
+        else {
+            front->next = head;
+            head = front;
+        }
+
+        length++;
+        debug_add_node(front);
+
+        verify_data();
+    } // O(1)
+
+    void pop_front() {
+        assert(length);
+
+        Node* tmp = head->next;
+        delete_node(head);
+        head = tmp;
+
+        if(length < 1) tail = head;
+
+        verify_data();
+    }
 
     Node* get_item(int idx_1) {
         // notice that the index is one based
@@ -115,7 +161,13 @@ public: // the operations on data
             }
             return cur;
         }
-    }
+    } // O(idx)
+    Node* get_item_back(int idx_1) {
+        // notice that the index is one based
+
+        if(idx_1 > length or idx_1 < 1) return nullptr;
+        else return get_item(length - idx_1 + 1);
+    } // O(idx)
 
     int search(int val) {
         // returning the index 0-based, or -1
@@ -127,7 +179,6 @@ public: // the operations on data
 
         return -1; //not found
     }
-
     int improved_search(int val) {
         // search with shifting to the left
 
@@ -142,6 +193,10 @@ public: // the operations on data
         }
 
         return -1;
+    }
+
+    bool is_same(const LinkedList& other) {
+        return(debug_to_string() == other.debug_to_string());
     }
 
     /// debugging and testing ///
@@ -166,7 +221,7 @@ public: // the operations on data
         assert(len == length);
         assert(length == (int)debug_data.size());
     }
-    string debug_to_string() {
+    string debug_to_string() const {
         string ret;
         forNode {
             ret += (to_string(cur->data) + ' ');
@@ -202,10 +257,39 @@ public: // the operations on data
     }
 };
 
+///////////////////////////////////////////////////////
+
+class ReducedLinkedList {
+    Node *head {};
+public:
+    void print() {
+        for(Node *cur = head; cur != nullptr; cur = cur->next)
+            cout << cur->data << ' ';
+        cout << endl;
+    } // O(n)
+
+    void add_element(int value) {
+        Node *node = new Node(value);
+        node->next = head;
+        head = node;
+    } // O(1)
+
+    Node* get_tail() {
+        if(head == nullptr) return nullptr;
+
+        Node *cur;
+        for(cur = head; cur->next; cur = cur->next)
+            ;
+        return cur;
+    } // O(n)
+};
+
+/////////////////////////////////////////////////////////
+
 int main()
 {
     /// start with the Nodes:
-    Node* Node1 = new Node(10); // head
+    /*Node* Node1 = new Node(10); // head
     Node* Node2 = new Node(20);
     Node* Node3 = new Node(30);
     // link them:
@@ -224,32 +308,61 @@ int main()
 
     // search:
     auto res = find(head, 1);
-    cout << (res == nullptr? "not found\n" : "found!\n");
+    cout << (res == nullptr? "not found\n" : "found!\n");*/
 
     /// linked list:
-    // try insert:
-    LinkedList list;
-    for (int i = 1; i <= 10; ++i) {
+    LinkedList list, list2;
+
+    // insert front:
+    for (int i = 1; i <= 40; i += 8) {
+        list.insert_front(i);
+    }
+    list2.insert_end(30);
+    list.print();
+    list2.print();
+
+    // is same
+    //if(list.is_same(list2)) cout << "same !!\n";
+
+    // pop front:
+    list.pop_front();
+    list2.pop_front();
+    list.print();
+    list2.print();
+
+    //if(!list2.is_same(list)) cout << "not same !!\n";
+
+
+    // insert end:
+    /*for (int i = 1; i <= 10; ++i) {
         list.insert_end(i*i);
     }
     list.print();
 
-    // get nth element:
-    cout << list.get_item(10)->data << endl;
+    // get nth element: (front/back)
+    if(list.get_item(10)) cout << "get item: " << list.get_item(10)->data << endl;
+    if(list.get_item_back(14)) cout << "get item back: " << list.get_item_back(14)->data << endl;
 
     // searching:
     cout << list.search(100) << endl;
     cout << list.improved_search(100) << endl;
-    cout << list.search(100) << endl;
-
-    // debugging and testing:
-    list.verify_data();
-    cout << list.debug_to_string() << endl;
-
-    // debugging using the vector:
-    list.debug_print_list();
+    cout << list.search(100) << endl;*/
 
 
-    cout << "\nNo RTE ;)"; // just for asserting
+    /// Reduced Linked List:
+    /*ReducedLinkedList rlist;
+    for (int i = 1; i <= 7; ++i) {
+        rlist.add_element(i);
+    }
+    rlist.print();
+    auto tail = rlist.get_tail();
+    if(tail) cout << tail->data << endl;*/
+
+    cout << "\nNo RTE ;)\n"; // just for asserting
     return 0;
 }
+
+/*
+ * TO DO:
+ * clear()
+ */
