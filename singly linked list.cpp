@@ -66,6 +66,17 @@ class LinkedList {
     Node* tail {};
     int length = 0; // don't forget to update it
 
+    // simple functions:
+    void add_node(Node* node) {
+        debug_add_node(node);
+        length++;
+    }
+    void delete_node(Node* node) {
+        debug_remove_node(node);
+        length--;
+        delete node;
+    }
+
     vector<Node*> debug_data; // to keep the elements of the linked list safe in case of any corruptness
     void debug_add_node(Node *node) {
         debug_data.push_back(node);
@@ -89,17 +100,6 @@ public: // the operations on data
         }
     }
 
-    // simple functions:
-    void add_node(Node* node) {
-        debug_add_node(node);
-        length++;
-    }
-    void delete_node(Node* node) {
-        debug_remove_node(node);
-        length--;
-        delete node;
-    }
-
     void print() {
         Node* cur = head; // to avoid changing 'head' value
         while(cur != nullptr) {
@@ -109,6 +109,7 @@ public: // the operations on data
         cout << endl;
     }
 
+    /// inserting:
     void insert_end(int value) {
         Node* nod = new Node(value); // we need to delete it
 
@@ -118,9 +119,10 @@ public: // the operations on data
             tail->next = nod;
             tail = nod;
         }
-        debug_add_node(nod);
 
-        length++;
+        add_node(nod);
+
+        verify_data();
     }
     void insert_front(int value) {
         Node* front = new Node(value);
@@ -132,24 +134,125 @@ public: // the operations on data
             head = front;
         }
 
-        length++;
-        debug_add_node(front);
+        add_node(front);
 
         verify_data();
     } // O(1)
 
+    /// deletion:
     void pop_front() {
         assert(length);
 
-        Node* tmp = head->next;
-        delete_node(head);
-        head = tmp;
+        Node* tmp = head;
+        head = head->next;
+        delete_node(tmp);
 
-        if(length < 1) tail = head;
+        if(!head) tail = nullptr;
+
+        verify_data();
+    }
+    void pop_back() { // O(length) time - O(1) memory
+        assert(length);
+
+        if(length == 1) {
+            pop_front();
+        }
+        else {
+            Node* prev = get_item(length - 1); // O(idx)
+            delete_node(tail);
+            tail = prev;
+            tail->next = nullptr; // don't forget
+        }
+
+        verify_data();
+    }
+    void delete_nth(int n) { // O(length) time - O(1) memory
+        assert(n > 0 and n <= length);
+
+        if(n == 1) pop_front();
+        else if(n == length) pop_back();
+        else {
+            Node* prev = get_item(n - 1); // O(idx)
+            Node* nth = prev->next;
+            prev->next = nth->next;
+
+            delete_node(nth);
+        }
+
+        verify_data();
+    }
+    bool delete_node_without_head(Node* node) { /// from interview Q
+        if(node == tail) return false; // but with a condition: it's not tail
+
+        node->data = node->next->data;
+        Node* temp = node->next;
+        node->next = node->next->next;
+
+        delete_node(temp);
+        return true;
+    }
+    void delete_node_with_key(int key) { // O(n) time - O(1) memory
+        if(!length) {
+            cout << "Empty list!\n";
+            return;
+        }
+
+        if(head->data == key) {
+            pop_front();
+            return;
+        }
+
+        bool found = false;
+        for(Node* prev = head; prev->next; prev = prev->next) {
+            if(prev->next->data == key) {
+                found = true;
+
+                Node* toDel = prev->next;
+                prev->next = prev->next->next;
+                delete_node(toDel);
+
+                if(!prev->next) tail = prev; // handle case of tail deletion
+
+                break;
+            }
+        }
+
+        if(!found) cout << "value not found!\n";
+
+        verify_data();
+    }
+    void delete_even_positions() {
+        if(length < 2) return;
+
+
+        Node* nextOdd = head;
+        Node* prevOdd;
+        while (nextOdd and nextOdd->next) {
+            Node* todel = nextOdd->next; // keeping
+            // linking:
+            prevOdd = nextOdd;
+            nextOdd = nextOdd->next->next;
+            prevOdd->next = nextOdd;
+            // deleting:
+            delete_node(todel);
+        }
+
+        if (!nextOdd) tail = prevOdd;
+
+        verify_data();
+    }
+    void clear() {
+        while(head != nullptr) {
+            Node* tmp = head;
+            head = head->next;
+            delete_node(tmp);
+        }
+        tail = nullptr;
 
         verify_data();
     }
 
+    /// get items:
     Node* get_item(int idx_1) {
         // notice that the index is one based
 
@@ -169,6 +272,7 @@ public: // the operations on data
         else return get_item(length - idx_1 + 1);
     } // O(idx)
 
+    /// search:
     int search(int val) {
         // returning the index 0-based, or -1
 
@@ -195,8 +299,53 @@ public: // the operations on data
         return -1;
     }
 
+    /// comparison:
     bool is_same(const LinkedList& other) {
-        return(debug_to_string() == other.debug_to_string());
+        Node* other_h = other.head, *cur_h = head;
+        for( ; cur_h and other_h; cur_h = cur_h->next, other_h = other_h->next)
+            if(cur_h->data != other_h->data) return false;
+
+        return !cur_h and !other_h;
+
+        verify_data();
+    }
+
+    /// swapping:
+private :
+    void swap_pairs_recurse(Node *&node) {
+        if(!node or !node->next) return;
+
+        swap(node->data, node->next->data);
+        swap_pairs_recurse(node->next->next);
+    }
+public:
+    void swap_pairs() { // O(n) time - O(1) memory (b. i pass pointers by ref ;)
+        swap_pairs_recurse(head);
+    }
+
+    /// reversing:
+public:
+    void reverse() {
+        if(length <= 1) return;
+
+        tail = head;
+        Node* prev = head;
+        head = head->next;
+
+        while (head) {
+            // store next & reverse the link:
+            Node* next = head->next;
+            head->next = prev;
+
+            // move step forward:
+            prev = head;
+            head = next;
+        }
+        // finalize head and tail:
+        head = prev; // b. head was null
+        tail->next = nullptr;
+
+        verify_data();
     }
 
     /// debugging and testing ///
@@ -205,7 +354,7 @@ public: // the operations on data
 
         if(length == 0) assert(head == nullptr and tail == nullptr);
         else {
-            assert(head != nullptr and tail != nullptr);
+            assert(head and tail);
             if(length == 1) assert(head == tail);
             else assert(head != tail);
 
@@ -284,79 +433,28 @@ public:
     } // O(n)
 };
 
-/////////////////////////////////////////////////////////
+////////////////////// test ///////////////////////////////////
+
+void test1() {
+    LinkedList list;
+    for (int i = 1; i <= 4; ++i) {
+        list.insert_end(i);
+    }
+    list.insert_end(14);
+    list.print();
+
+
+    // delete even positions:
+    list.delete_even_positions();
+    list.print();
+
+}
+
+//////////////////// main ////////////////////////////////////
 
 int main()
 {
-    /// start with the Nodes:
-    /*Node* Node1 = new Node(10); // head
-    Node* Node2 = new Node(20);
-    Node* Node3 = new Node(30);
-    // link them:
-    Node1->next = Node2;
-    Node2->next = Node3;
-    Node3->next = nullptr;
-
-    // displaying Nodes:
-    Node* head = Node1;
-
-    print_iterate(head);
-    /// why head didn't change, even if it's a pass by ptr?!
-    print_recurse(head);
-    print_recurse_reverse(head);
-    cout << endl;
-
-    // search:
-    auto res = find(head, 1);
-    cout << (res == nullptr? "not found\n" : "found!\n");*/
-
-    /// linked list:
-    LinkedList list, list2;
-
-    // insert front:
-    for (int i = 1; i <= 40; i += 8) {
-        list.insert_front(i);
-    }
-    list2.insert_end(30);
-    list.print();
-    list2.print();
-
-    // is same
-    //if(list.is_same(list2)) cout << "same !!\n";
-
-    // pop front:
-    list.pop_front();
-    list2.pop_front();
-    list.print();
-    list2.print();
-
-    //if(!list2.is_same(list)) cout << "not same !!\n";
-
-
-    // insert end:
-    /*for (int i = 1; i <= 10; ++i) {
-        list.insert_end(i*i);
-    }
-    list.print();
-
-    // get nth element: (front/back)
-    if(list.get_item(10)) cout << "get item: " << list.get_item(10)->data << endl;
-    if(list.get_item_back(14)) cout << "get item back: " << list.get_item_back(14)->data << endl;
-
-    // searching:
-    cout << list.search(100) << endl;
-    cout << list.improved_search(100) << endl;
-    cout << list.search(100) << endl;*/
-
-
-    /// Reduced Linked List:
-    /*ReducedLinkedList rlist;
-    for (int i = 1; i <= 7; ++i) {
-        rlist.add_element(i);
-    }
-    rlist.print();
-    auto tail = rlist.get_tail();
-    if(tail) cout << tail->data << endl;*/
+    test1();
 
     cout << "\nNo RTE ;)\n"; // just for asserting
     return 0;
