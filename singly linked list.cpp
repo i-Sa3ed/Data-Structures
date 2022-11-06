@@ -109,7 +109,7 @@ public: // the operations on data
         cout << endl;
     }
 
-    /// inserting:
+    /// insertion:
     void insert_end(int value) {
         Node* nod = new Node(value); // we need to delete it
 
@@ -138,6 +138,29 @@ public: // the operations on data
 
         verify_data();
     } // O(1)
+    void insert_sorted(int value) { // O(n) time - O(1) memory
+        if(!length or head->data >= value)
+            insert_front(value);
+        else if(tail->data <= value)
+            insert_end(value);
+        else {
+            for(Node* cur = head; cur; cur = cur->next) {
+                if(cur->next->data >= value) {
+                    Node* node = new Node(value);
+                    // linking:
+                    node->next = cur->next;
+                    cur->next = node;
+
+                    add_node(node);
+
+                    break;
+                }
+            }
+
+        }
+
+        verify_data();
+    }
 
     /// deletion:
     void pop_front() {
@@ -437,15 +460,20 @@ public:
 
 void test1() {
     LinkedList list;
-    for (int i = 1; i <= 4; ++i) {
-        list.insert_end(i);
-    }
-    list.insert_end(14);
+
+    /// inset sorted:
+
+    // empty list:
+    list.insert_sorted(14);
     list.print();
 
+    // smallest:
+    list.insert_sorted(10);
+    list.print();
 
-    // delete even positions:
-    list.delete_even_positions();
+    // more than one:
+    for(int i = 5; i <= 20; i += 5)
+        list.insert_sorted(i);
     list.print();
 
 }
