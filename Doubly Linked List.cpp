@@ -140,8 +140,6 @@ public:
     /// insertion:
     void insert_end(int value) {
         Node* item = new Node(value);
-        // add to the vector //
-
         if(!head)
             head = tail = item;
         else {
