@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-template <typename T> class Stack {
+template <typename T>
+class Stack {
     int size {};
     int topidx {};
     T* array {};
