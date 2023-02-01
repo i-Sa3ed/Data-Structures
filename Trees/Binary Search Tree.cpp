@@ -375,6 +375,8 @@ bool is_degenerate(vector<type>& preorder) {
     return true;
 }
 
+////////////////////////////////////////////////////////////
+
 /// challenge: parent link
 class BST_Parent {
     int data{};
@@ -452,6 +454,9 @@ public:
         return {false, -1}; // node = max value
     }
 };
+
+////////////////////////////////////////////////////////////
+
 
 /// challenge: rewrite the class using internal Node struct
 // pros: easily delete the root (more flexible code)
