@@ -1,2 +1,3 @@
 # Data-Structures
-uplaoding my codes during the journey of learning data structues (with cpp)
+for uploading the codes of the data structures that I learnt
+Mainly written by C++ language
