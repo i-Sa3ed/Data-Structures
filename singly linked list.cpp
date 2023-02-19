@@ -87,6 +87,16 @@ class LinkedList {
         else debug_data.erase(it);
     }
 
+    // utility to test "remove_cycle" function
+    void create_cycle() {
+        for (int i = 0; i < 4; ++i)
+            insert_end(i);
+        Node* now = tail;
+        for (int i = 0; i < 3; ++i)
+            insert_end(14 + i);
+        tail->next = now;// cycle
+    }
+
 public: // the operations on data
     LinkedList() = default;
     LinkedList(const LinkedList&) = delete;
@@ -124,6 +134,19 @@ public: // the operations on data
 
         verify_data();
     }
+
+    // Hashing challenge:
+    void remove_cycle() {
+        unordered_set<Node*> visited;
+        for (Node *prev = nullptr, *cur = head; cur; prev = cur, cur = cur->next) {
+            if (visited.count(cur)) { // visited before => cycle
+                prev->next = nullptr;
+                prev = tail;
+                break;
+            }
+        }
+    }
+
     void insert_front(int value) {
         Node* front = new Node(value);
         if (head == nullptr) {
